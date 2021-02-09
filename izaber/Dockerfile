@@ -7,38 +7,69 @@ LABEL maintainer="IT <it@zaber.com>"
 
 USER root
 
-RUN apt-get update
-RUN apt-get install -yq --no-install-recommends vim-nox ffmpeg dvipng cm-super curl cmake
+RUN apt-get update && \
+    apt-get install -yq --no-install-recommends \
+        vim-nox \
+        ffmpeg \
+        dvipng \
+        cm-super \
+        curl \
+        tree \
+        cmake \
+        rsync  \
+        postgresql-client-common \
+        iputils-ping \
+        postgresql-client \
+        sqlite3 \
+        openssh-client && \
+    curl https://sh.rustup.rs -sSf | bash -s -- -y && \
+    $HOME/.cargo/bin/cargo install evcxr_jupyter &&  $HOME/.cargo/bin/evcxr_jupyter --install && \
+    pip3 install \
+        attrs \
+        izaber \
+        izaber-wamp \
+        izaber-wamp-zerp \
+        zaber-motion \
+        redash-api-client \
+        peewee \
+        google-api-python-client \
+        google-auth-oauthlib \
+        ldap3 \
+        drawnow \
+        fuzzywuzzy \
+        openpyxl \
+        GitPython \
+        the \
+        Pillow \
+        pyinstaller \
+        pymongo \
+        pyopenssl \
+        requests \
+        plotly \
+        chart_studio \
+        msgpack \
+        paho-mqtt \
+        memory-profiler \
+        PyMySQL \
+        pytest \
+        redash-toolbelt \
+        tox \
+        oauth2client \
+        mattermostdriver \
+        izaber-wamp-zerp \
+        jupyterlab-quickopen==0.5.0 \
+        jupyterlab-git \
+        nbdime \
+        python-language-server[all] \
+        psycopg2-binary \
+        elyra==1.5.3 \
+        git+https://gitlab.izaber.com/scripts/zaber-libs.git \
+        paramiko && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install Rust
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
-RUN $HOME/.cargo/bin/cargo install evcxr_jupyter &&  $HOME/.cargo/bin/evcxr_jupyter --install
-
-# Install the
-RUN conda install -y --quiet -f -c conda-forge xeus-cling xtensor
-
-# Install all OS dependencies for fully functional notebook server
-RUN pip3 install \
-         izaber \
-         izaber-wamp \
-         izaber-wamp-zerp \
-         zaber-motion \
-         redash-api-client \
-         peewee \
-         google-api-python-client \
-         google-auth-oauthlib \
-         oauth2client \
-         mattermostdriver \
-         izaber-wamp-zerp \
-         jupyterlab-quickopen==0.5.0 \
-         jupyterlab-git \
-         nbdime \
-         python-language-server[all] \
-         psycopg2-binary \
-    && \
-        apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN jupyter labextension install jupyterlab-drawio
+# Was not working :(
+#    jupyter labextension install jupyterlab-drawio && \
 
 # Install Python 3 packages
 RUN conda install --quiet --yes \
@@ -56,51 +87,58 @@ RUN conda install --quiet --yes \
     'matplotlib-base=3.3.*' \
     'numba=0.52.*' \
     'numexpr=2.7.*' \
+    'nbconvert' \
     'pandas=1.2.*' \
     'patsy=0.5.*' \
     'protobuf=3.14.*' \
     'pytables=3.6.*' \
     'scikit-image=0.18.*' \
     'scikit-learn=0.24.*' \
+    'itkwidgets' \
     'scipy=1.6.*' \
+    'python-kaleido' \
+    'plotly-geo' \
     'seaborn=0.11.*' \
     'sqlalchemy=1.3.*' \
     'statsmodels=0.12.*' \
     'sympy=1.7.*' \
     'vincent=0.4.*' \
     'widgetsnbextension=3.5.*'\
+    'xeus-cling' \
+    'xtensor' \
     'xlrd=2.0.*' && \
     fix-permissions "${CONDA_DIR}" && \
-    fix-permissions "/home/${NB_USER}"
+    fix-permissions "/home/${NB_USER}" && \
+    jupyter labextension install @jupyter-widgets/jupyterlab-manager \
+                                  jupyter-matplotlib \
+                                  jupyterlab-datawidgets \
+                                  @parente/jupyterlab-quickopen \
+                                  jupyterlab-plotly@4.14.3 \
+                                  jupyterlab-chart-editor \
+                                  itkwidgets && \
+    jupyter lab build && \
+    conda clean --all -f -y
 
-#         jupyterlab-python-file \
-#         nbdime \
-#         jupyter-lsp python-language-server[all] \
+#conda install -y --quiet -f -c conda-forge xeus-cling xtensor && \
 
-#    && \
-#        jupyter labextension install @jupyterlab/git \
-#    && \
-#        jupyter labextension install @krassowski/jupyterlab-lsp \
-
-#    conda clean --all -f -y && \
 
 # Install facets which does not have a pip or conda package at the moment
 WORKDIR /tmp
 RUN git clone https://github.com/PAIR-code/facets.git && \
     jupyter nbextension install facets/facets-dist/ --sys-prefix && \
     rm -rf /tmp/facets && \
-    fix-permissions "${CONDA_DIR}" && \
-    fix-permissions "/home/${NB_USER}"
-
-RUN jupyter lab build
-
-RUN rm -rf "/home/${NB_USER}/.cache/yarn" && \
+    rm -rf "/home/${NB_USER}/.cache/yarn" && \
+    rm -rf "/home/${NB_USER}/work" && \
     rm -rf "/home/${NB_USER}/.node-gyp" && \
     fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}" && \
+    ln -snf /usr/share/zoneinfo/America/Vancouver /etc/localtime && \
+    echo "America/Vancouver" > /etc/timezone && \
+    mv "/home/${NB_USER}" "/home/skel" && \
+    mkdir "/home/${NB_USER}" && \
     fix-permissions "/home/${NB_USER}"
 
-
-# Switch back to jovyan to avoid accidental container runs as root
+# Switch back to zaber to avoid accidental container runs as root
 USER $NB_UID
 WORKDIR $HOME
 
