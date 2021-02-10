@@ -46,6 +46,7 @@ RUN apt-get update && \
         pyopenssl \
         requests \
         plotly \
+        plotly-geo \
         chart_studio \
         msgpack \
         paho-mqtt \
@@ -97,7 +98,6 @@ RUN conda install --quiet --yes \
     'itkwidgets' \
     'scipy=1.6.*' \
     'python-kaleido' \
-    'plotly-geo' \
     'seaborn=0.11.*' \
     'sqlalchemy=1.3.*' \
     'statsmodels=0.12.*' \
@@ -113,7 +113,8 @@ RUN conda install --quiet --yes \
                                   jupyter-matplotlib \
                                   jupyterlab-datawidgets \
                                   @parente/jupyterlab-quickopen \
-                                  jupyterlab-plotly@4.14.3 \
+                                  jupyterlab-plotly \
+                                  plotlywidget \
                                   jupyterlab-chart-editor \
                                   itkwidgets && \
     jupyter lab build && \
